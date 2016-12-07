@@ -9,11 +9,11 @@ public class Time {
 
     public static void main(String []args) throws FileNotFoundException, IOException{
     	
+    	Twitter4jEx.SetPropsINI();
+    	
     	TwitterExample twe = new TwitterExample();
-    	
     	//twe.twgo();
-    	
-    	twe.OperateWithAuthToken();
+    	//twe.OperateWithAuthToken();
     	
     	/*
     	ExampleReadINI v = new ExampleReadINI();
