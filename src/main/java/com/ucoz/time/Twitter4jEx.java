@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Properties;
 
+import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
@@ -32,6 +33,24 @@ public class Twitter4jEx {
 	public Twitter4jEx() {
 	}
 
+	public static void OperateWithAuthToken() throws IOException, TwitterException {
+
+		ReadINI();
+
+		   // The factory instance is re-useable and thread safe.
+	    TwitterFactory factory = new TwitterFactory();
+	    AccessToken accessToken = new AccessToken(oauth_token, oauth_token_secret);
+	    Twitter twitter = factory.getInstance();
+	    twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET);
+	    twitter.setOAuthAccessToken(accessToken);
+
+		// Now let's go and ask for a protected resource!
+		System.out.println("Now we're going to access a protected resource...");
+	    Status status = twitter.updateStatus("2sleep");
+	    System.out.println("Successfully updated the status to [" + status.getText() + "].");
+	    System.exit(0);
+	}
+
 	private static void ReadINI() throws FileNotFoundException, IOException {
 		Properties props = new Properties();
 		props.load(new FileInputStream(new File("example.ini")));
@@ -43,8 +62,6 @@ public class Twitter4jEx {
 		oauth_token_secret = props.getProperty("oauth_token_secret");
 	}
 
-	// public static void SetPropsINI() throws FileNotFoundException,
-	// IOException {
 	public static void SetPropsINI(AccessToken accessToken)
 			throws FileNotFoundException, IOException {
 		String fname = "example.ini";
@@ -54,8 +71,6 @@ public class Twitter4jEx {
 
 		OutputStream os = null;
 		try {
-			// props.setProperty("oauth_token", "qq1");
-			// props.setProperty("oauth_token_secret", "qq2");
 			props.setProperty("oauth_token", accessToken.getToken());
 			props.setProperty("oauth_token_secret",
 					accessToken.getTokenSecret());
@@ -124,7 +139,7 @@ public class Twitter4jEx {
 			System.out.println("Access token secret: "
 					+ accessToken.getTokenSecret());
 			SetPropsINI(accessToken);
-			// System.exit(0);
+			System.exit(0);
 		} catch (TwitterException te) {
 			te.printStackTrace();
 			System.out.println("Failed to get accessToken: " + te.getMessage());

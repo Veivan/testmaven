@@ -3,14 +3,15 @@ package com.ucoz.time;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import javax.swing.JOptionPane;
+import twitter4j.TwitterException;
 
 public class Time {
 
-    public static void main(String []args) throws FileNotFoundException, IOException{
+    public static void main(String []args) throws FileNotFoundException, IOException, TwitterException{
     	
     	Twitter4jEx tw4j = new Twitter4jEx();   	
-    	tw4j.getOAuthAccessToken();
+    	//tw4j.getOAuthAccessToken();
+    	Twitter4jEx.OperateWithAuthToken();
     	
     	// Works well
     	//TwitterExample twe = new TwitterExample();
