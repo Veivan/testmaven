@@ -43,10 +43,10 @@ public class Twitter4jEx {
 		oauth_token_secret = props.getProperty("oauth_token_secret");
 	}
 
-	public static void SetPropsINI() throws FileNotFoundException, IOException {
-		// public static void SetPropsINI(AccessToken accessToken) throws
-		// FileNotFoundException, IOException {
-
+	// public static void SetPropsINI() throws FileNotFoundException,
+	// IOException {
+	public static void SetPropsINI(AccessToken accessToken)
+			throws FileNotFoundException, IOException {
 		String fname = "example.ini";
 		File file = new File(fname);
 		Properties props = new Properties();
@@ -54,11 +54,11 @@ public class Twitter4jEx {
 
 		OutputStream os = null;
 		try {
-			props.setProperty("oauth_token", "qq1");
-			props.setProperty("oauth_token_secret", "qq2");
-			// props.setProperty("oauth_token", accessToken.getToken());
-			// props.setProperty("oauth_token_secret",
-			// accessToken.getTokenSecret());
+			// props.setProperty("oauth_token", "qq1");
+			// props.setProperty("oauth_token_secret", "qq2");
+			props.setProperty("oauth_token", accessToken.getToken());
+			props.setProperty("oauth_token_secret",
+					accessToken.getTokenSecret());
 			os = new FileOutputStream(file);
 			props.store(os, "twitter4j.properties");
 			os.close();
@@ -121,7 +121,7 @@ public class Twitter4jEx {
 			System.out.println("Access token: " + accessToken.getToken());
 			System.out.println("Access token secret: "
 					+ accessToken.getTokenSecret());
-
+			SetPropsINI(accessToken);
 			// System.exit(0);
 		} catch (TwitterException te) {
 			te.printStackTrace();
@@ -133,38 +133,4 @@ public class Twitter4jEx {
 			System.exit(-1);
 		}
 	}
-
-	/*
-	 * public AccessToken getOAuthAccessToken(final String username, final
-	 * String password) throws AuthenticationException,
-	 * OAuthPasswordAuthenticator.CallbackURLException { authenticity_token =
-	 * null; callback_url = null; try { final RequestToken request_token =
-	 * twitter.getOAuthRequestToken(DEFAULT_OAUTH_CALLBACK); final String
-	 * oauth_token = request_token.getToken();
-	 * readAuthenticityToken(getHTTPContent(request_token.getAuthorizationURL(),
-	 * false, null)); if (authenticity_token == null) throw new
-	 * AuthenticationException("Cannot get authenticity token."); final
-	 * Configuration conf = twitter.getConfiguration(); final HttpParameter[]
-	 * params = new HttpParameter[4]; params[0] = new
-	 * HttpParameter("authenticity_token", authenticity_token); params[1] = new
-	 * HttpParameter("oauth_token", oauth_token); params[2] = new
-	 * HttpParameter("session[username_or_email]", username); params[3] = new
-	 * HttpParameter("session[password]", password);
-	 * readCallbackURL(getHTTPContent
-	 * (conf.getOAuthAuthorizationURL().toString(), true, params)); if
-	 * (callback_url == null) throw new CallbackURLException(); if
-	 * (!callback_url.startsWith(DEFAULT_OAUTH_CALLBACK)) throw new
-	 * IOException("Wrong OAuth callback URL " + callback_url); final String
-	 * oauth_verifier =
-	 * parseParameters(callback_url.substring(callback_url.indexOf("?") +
-	 * 1)).get( OAUTH_VERIFIER); if (isNullOrEmpty(oauth_verifier)) throw new
-	 * AuthenticationException("Cannot get OAuth verifier."); return
-	 * twitter.getOAuthAccessToken(request_token, oauth_verifier); } catch
-	 * (final IOException e) { throw new AuthenticationException(e); } catch
-	 * (final SAXException e) { throw new AuthenticationException(e); } catch
-	 * (final TwitterException e) { throw new AuthenticationException(e); }
-	 * catch (final NullPointerException e) { throw new
-	 * AuthenticationException(e); } }
-	 */
-
 }
