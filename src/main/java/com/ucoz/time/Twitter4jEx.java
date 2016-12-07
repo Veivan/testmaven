@@ -77,7 +77,9 @@ public class Twitter4jEx {
 
 	public void getOAuthAccessToken() {
 		try {
+			ReadINI();
 			Twitter twitter = new TwitterFactory().getInstance();
+			twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET);
 			RequestToken requestToken = twitter.getOAuthRequestToken();
 			System.out.println("Got request token.");
 			System.out.println("Request token: " + requestToken.getToken());
