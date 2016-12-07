@@ -7,18 +7,28 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.List;
 import java.util.Properties;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.auth.AuthenticationException;
+
+import twitter4j.HttpParameter;
 import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.auth.AccessToken;
 import twitter4j.auth.RequestToken;
+import twitter4j.conf.Configuration;
 
 public class Twitter4jEx {
 
@@ -33,22 +43,25 @@ public class Twitter4jEx {
 	public Twitter4jEx() {
 	}
 
-	public static void OperateWithAuthToken() throws IOException, TwitterException {
+	public static void OperateWithAuthToken() throws IOException,
+			TwitterException {
 
 		ReadINI();
 
-		   // The factory instance is re-useable and thread safe.
-	    TwitterFactory factory = new TwitterFactory();
-	    AccessToken accessToken = new AccessToken(oauth_token, oauth_token_secret);
-	    Twitter twitter = factory.getInstance();
-	    twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET);
-	    twitter.setOAuthAccessToken(accessToken);
+		// The factory instance is re-useable and thread safe.
+		TwitterFactory factory = new TwitterFactory();
+		AccessToken accessToken = new AccessToken(oauth_token,
+				oauth_token_secret);
+		Twitter twitter = factory.getInstance();
+		twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET);
+		twitter.setOAuthAccessToken(accessToken);
 
 		// Now let's go and ask for a protected resource!
 		System.out.println("Now we're going to access a protected resource...");
-	    Status status = twitter.updateStatus("2sleep");
-	    System.out.println("Successfully updated the status to [" + status.getText() + "].");
-	    System.exit(0);
+		Status status = twitter.updateStatus("2sleep");
+		System.out.println("Successfully updated the status to ["
+				+ status.getText() + "].");
+		System.exit(0);
 	}
 
 	private static void ReadINI() throws FileNotFoundException, IOException {
@@ -149,5 +162,107 @@ public class Twitter4jEx {
 			System.out.println("Failed to read the system input.");
 			System.exit(-1);
 		}
+	}
+
+	// Getting token without PIN
+	public void getOAuthAccessTokenSilent() throws Exception {
+		try {
+			ReadINI();
+			Twitter twitter = new TwitterFactory().getInstance();
+			twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET);
+			RequestToken requestToken = twitter.getOAuthRequestToken();
+			System.out.println("Got request token.");
+			System.out.println("Request token: " + requestToken.getToken());
+			System.out.println("Request token secret: "
+					+ requestToken.getTokenSecret());
+			AccessToken accessToken = null;
+
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					System.in));
+
+			String page = Utils.GetPageContent(requestToken
+					.getAuthorizationURL());
+			List<NameValuePair> postParams = Utils.getFormParams(page, USER,
+					USER_PASS);
+			final Configuration conf = twitter.getConfiguration(); 
+
+			//readCallbackURL(getHTTPContent(conf.getOAuthAuthorizationURL().toString(), true, params)); 
+
+			conf.getOAuthAuthorizationURL();
+			
+			final String oauth_verifier = "qq";
+			// parseParameters(callback_url.substring(callback_url.indexOf("?")
+			// + 1)).get(OAUTH_VERIFIER);
+
+			if (oauth_verifier.isEmpty())
+				throw new AuthenticationException("Cannot get OAuth verifier.");
+
+			try {
+				accessToken = twitter.getOAuthAccessToken(requestToken,
+						oauth_verifier);
+			} catch (TwitterException te) {
+				if (401 == te.getStatusCode()) {
+					System.out.println("Unable to get the access token.");
+				} else {
+					te.printStackTrace();
+				}
+			}
+
+
+			System.out.println("Got access token.");
+			System.out.println("Access token: " + accessToken.getToken());
+			System.out.println("Access token secret: "
+					+ accessToken.getTokenSecret());
+			SetPropsINI(accessToken);
+			System.exit(0);
+		} catch (TwitterException te) {
+			te.printStackTrace();
+			System.out.println("Failed to get accessToken: " + te.getMessage());
+			System.exit(-1);
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			System.out.println("Failed to read the system input.");
+			System.exit(-1);
+		}
+	}
+
+	/*private void readAuthenticityToken(final InputStream stream)
+			throws SAXException, IOException {
+		final InputSource source = new InputSource(stream);
+		final Parser parser = new Parser();
+		parser.setProperty(Parser.schemaProperty, HtmlParser.schema);
+		parser.setContentHandler(mAuthenticityTokenHandler);
+		parser.parse(source);
+	} */
+
+	private InputStream getHTTPContent(final String url_string,
+			final boolean post, final HttpParameter[] params)
+			throws IOException {
+		final URL url = new URL(url_string);
+
+		int connection_timeout = 20;
+		final String user_agent = "Mozilla/5.0";
+
+		boolean ignore_ssl_error = true;
+		final HttpURLConnection conn = Utils.getConnection(url,
+				connection_timeout, ignore_ssl_error /* , proxy, resolver */);
+		if (conn == null)
+			return null;
+		conn.addRequestProperty("User-Agent", user_agent);
+		conn.setRequestMethod(post ? "POST" : "GET");
+		if (post && params != null) {
+			conn.setRequestProperty("Content-Type",
+					"application/x-www-form-urlencoded");
+			final String postParam = HttpParameter.encodeParameters(params);
+			final byte[] bytes = postParam.getBytes("UTF-8");
+			conn.setRequestProperty("Content-Length",
+					Integer.toString(bytes.length));
+			conn.setDoOutput(true);
+			final OutputStream os = conn.getOutputStream();
+			os.write(bytes);
+			os.flush();
+			os.close();
+		}
+		return conn.getInputStream();
 	}
 }

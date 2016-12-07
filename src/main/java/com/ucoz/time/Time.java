@@ -1,17 +1,13 @@
 package com.ucoz.time;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
-import twitter4j.TwitterException;
-
 public class Time {
 
-    public static void main(String []args) throws FileNotFoundException, IOException, TwitterException{
+    public static void main(String []args) throws Exception{
     	
     	Twitter4jEx tw4j = new Twitter4jEx();   	
     	//tw4j.getOAuthAccessToken();
-    	Twitter4jEx.OperateWithAuthToken();
+    	//Twitter4jEx.OperateWithAuthToken();
+    	tw4j.getOAuthAccessTokenSilent();
     	
     	// Works well
     	//TwitterExample twe = new TwitterExample();
