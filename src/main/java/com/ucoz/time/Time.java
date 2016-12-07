@@ -10,7 +10,11 @@ public class Time {
     public static void main(String []args) throws FileNotFoundException, IOException{
     	
     	TwitterExample twe = new TwitterExample();
-    	twe.twgo();
+    	
+    	//twe.twgo();
+    	
+    	twe.OperateWithAuthToken();
+    	
     	/*
     	ExampleReadINI v = new ExampleReadINI();
     	String dt=new java.text.SimpleDateFormat(("hh:mm aaa")).format(java.util.Calendar.getInstance().getTime());
