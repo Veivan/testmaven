@@ -1,6 +1,9 @@
 package com.ucoz.time;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -88,16 +91,17 @@ public class Utils {
 
 		return result.toString();
 	}
-	
-	public static List<NameValuePair> getFormParams(String html, String username,
-			String password) throws UnsupportedEncodingException {
+
+	public static List<NameValuePair> getFormParams(String html,
+			String username, String password)
+			throws UnsupportedEncodingException {
 
 		System.out.println("Extracting form's data...");
 		Document doc = Jsoup.parse(html);
 
 		// Login form id
 		Element loginform = doc.getElementById("oauth_form");
-				//.getElementsByClass("LoginForm js-front-signin").first();// 
+		// .getElementsByClass("LoginForm js-front-signin").first();//
 		Elements inputElements = loginform.getElementsByTag("input");
 
 		List<NameValuePair> paramList = new ArrayList<NameValuePair>();
@@ -117,5 +121,37 @@ public class Utils {
 		}
 		return paramList;
 	}
+
+	public static String readAuthenticityToken(String html)
+			throws UnsupportedEncodingException {
+
+		System.out.println("Extracting authenticity_token...");
+		Document doc = Jsoup.parse(html);
+		String result = "";
+		// Login form id
+		Element loginform = doc.getElementById("oauth_form");
+		Elements inputElements = loginform.getElementsByTag("input");
+
+		for (Element inputElement : inputElements) {
+			String key = inputElement.attr("name");
+			String value = inputElement.attr("value");
+			if (key.equals("authenticity_token")) {
+				result = value;
+				break;
+			}
+		}
+		return result;
+	}
 	
+	public static void Save2file(String buffer, String filename) throws Exception {
+		BufferedWriter bwr = new BufferedWriter(new FileWriter(new File(
+				filename)));
+		// write contents of StringBuffer to a file
+		bwr.write(buffer);
+		// flush the stream
+		bwr.flush();
+		// close the stream
+		bwr.close();
+	}
+
 }

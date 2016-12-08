@@ -1,7 +1,9 @@
 package com.ucoz.time;
 
 import java.awt.Desktop;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,8 +39,8 @@ public class Twitter4jEx {
 	private static String USER;
 	private static String USER_PASS;
 
-	private static String oauth_token;
-	private static String oauth_token_secret;
+	private static String ACCESS_TOKEN;
+	private static String ACCESS_TOKEN_SECRET;
 
 	public Twitter4jEx() {
 	}
@@ -50,8 +52,8 @@ public class Twitter4jEx {
 
 		// The factory instance is re-useable and thread safe.
 		TwitterFactory factory = new TwitterFactory();
-		AccessToken accessToken = new AccessToken(oauth_token,
-				oauth_token_secret);
+		AccessToken accessToken = new AccessToken(ACCESS_TOKEN,
+				ACCESS_TOKEN_SECRET);
 		Twitter twitter = factory.getInstance();
 		twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET);
 		twitter.setOAuthAccessToken(accessToken);
@@ -71,8 +73,8 @@ public class Twitter4jEx {
 		CONSUMER_SECRET = props.getProperty("CONSUMER_SECRET");
 		USER = props.getProperty("USER");
 		USER_PASS = props.getProperty("USER_PASS");
-		oauth_token = props.getProperty("oauth_token");
-		oauth_token_secret = props.getProperty("oauth_token_secret");
+		ACCESS_TOKEN = props.getProperty("ACCESS_TOKEN");
+		ACCESS_TOKEN_SECRET = props.getProperty("ACCESS_TOKEN_SECRET");
 	}
 
 	public static void SetPropsINI(AccessToken accessToken)
@@ -84,8 +86,8 @@ public class Twitter4jEx {
 
 		OutputStream os = null;
 		try {
-			props.setProperty("oauth_token", accessToken.getToken());
-			props.setProperty("oauth_token_secret",
+			props.setProperty("ACCESS_TOKEN", accessToken.getToken());
+			props.setProperty("ACCESS_TOKEN_SECRET",
 					accessToken.getTokenSecret());
 			os = new FileOutputStream(file);
 			props.store(os, "twitter4j.properties");
@@ -170,9 +172,10 @@ public class Twitter4jEx {
 			ReadINI();
 			Twitter twitter = new TwitterFactory().getInstance();
 			twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET);
-			RequestToken requestToken = twitter.getOAuthRequestToken();
+			final RequestToken requestToken = twitter.getOAuthRequestToken();
+			final String oauth_token = requestToken.getToken();
 			System.out.println("Got request token.");
-			System.out.println("Request token: " + requestToken.getToken());
+			System.out.println("Request token: " + oauth_token);
 			System.out.println("Request token secret: "
 					+ requestToken.getTokenSecret());
 			AccessToken accessToken = null;
@@ -182,14 +185,31 @@ public class Twitter4jEx {
 
 			String page = Utils.GetPageContent(requestToken
 					.getAuthorizationURL());
-			List<NameValuePair> postParams = Utils.getFormParams(page, USER,
-					USER_PASS);
-			final Configuration conf = twitter.getConfiguration(); 
+			// List<NameValuePair> postParams = Utils.getFormParams(page, USER,
+			// USER_PASS);
 
-			//readCallbackURL(getHTTPContent(conf.getOAuthAuthorizationURL().toString(), true, params)); 
+			String authenticity_token = Utils.readAuthenticityToken(page);
+			if (authenticity_token.isEmpty())
+				throw new AuthenticationException(
+						"Cannot get authenticity_token.");
 
-			conf.getOAuthAuthorizationURL();
-			
+			final Configuration conf = twitter.getConfiguration();
+
+			final HttpParameter[] params = new HttpParameter[4];
+			params[0] = new HttpParameter("authenticity_token",
+					authenticity_token);
+			params[1] = new HttpParameter("oauth_token", oauth_token);
+			params[2] = new HttpParameter("session[username_or_email]", USER);
+			params[3] = new HttpParameter("session[password]", USER_PASS);
+			InputStream stream = getHTTPContent(
+					conf.getOAuthAuthorizationURL().toString(), true, params);
+
+			String page2 = ReadStream(stream);
+			Utils.Save2file(page2, "d:/demo.txt");
+
+			// readCallbackURL(getHTTPContent(conf.getOAuthAuthorizationURL().toString(),
+			// true, params));
+
 			final String oauth_verifier = "qq";
 			// parseParameters(callback_url.substring(callback_url.indexOf("?")
 			// + 1)).get(OAUTH_VERIFIER);
@@ -208,7 +228,6 @@ public class Twitter4jEx {
 				}
 			}
 
-
 			System.out.println("Got access token.");
 			System.out.println("Access token: " + accessToken.getToken());
 			System.out.println("Access token secret: "
@@ -226,21 +245,21 @@ public class Twitter4jEx {
 		}
 	}
 
-	/*private void readAuthenticityToken(final InputStream stream)
-			throws SAXException, IOException {
-		final InputSource source = new InputSource(stream);
-		final Parser parser = new Parser();
-		parser.setProperty(Parser.schemaProperty, HtmlParser.schema);
-		parser.setContentHandler(mAuthenticityTokenHandler);
-		parser.parse(source);
-	} */
+	/*
+	 * private void readAuthenticityToken(final InputStream stream) throws
+	 * SAXException, IOException { final InputSource source = new
+	 * InputSource(stream); final Parser parser = new Parser();
+	 * parser.setProperty(Parser.schemaProperty, HtmlParser.schema);
+	 * parser.setContentHandler(mAuthenticityTokenHandler);
+	 * parser.parse(source); }
+	 */
 
 	private InputStream getHTTPContent(final String url_string,
 			final boolean post, final HttpParameter[] params)
 			throws IOException {
 		final URL url = new URL(url_string);
 
-		int connection_timeout = 20;
+		int connection_timeout = 100;
 		final String user_agent = "Mozilla/5.0";
 
 		boolean ignore_ssl_error = true;
@@ -264,5 +283,16 @@ public class Twitter4jEx {
 			os.close();
 		}
 		return conn.getInputStream();
+	}
+
+	private String ReadStream(InputStream inputStream) throws IOException {
+		BufferedInputStream bis = new BufferedInputStream(inputStream);
+		ByteArrayOutputStream buf = new ByteArrayOutputStream();
+		int result = bis.read();
+		while (result != -1) {
+			buf.write((byte) result);
+			result = bis.read();
+		}
+		return buf.toString();
 	}
 }
