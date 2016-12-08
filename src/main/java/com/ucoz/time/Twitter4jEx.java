@@ -182,6 +182,8 @@ public class Twitter4jEx {
 
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					System.in));
+			
+			System.out.println("AuthorizationURL : " + requestToken.getAuthorizationURL());
 
 			String page = Utils.GetPageContent(requestToken
 					.getAuthorizationURL());
@@ -194,6 +196,7 @@ public class Twitter4jEx {
 						"Cannot get authenticity_token.");
 
 			final Configuration conf = twitter.getConfiguration();
+			System.out.println("OAuthAuthorizationURL : " + conf.getOAuthAuthorizationURL());
 
 			final HttpParameter[] params = new HttpParameter[4];
 			params[0] = new HttpParameter("authenticity_token",
