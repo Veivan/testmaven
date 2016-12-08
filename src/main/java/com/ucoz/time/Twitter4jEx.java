@@ -41,7 +41,10 @@ public class Twitter4jEx {
 
 	private static String ACCESS_TOKEN;
 	private static String ACCESS_TOKEN_SECRET;
-
+	
+	public static final String PROTOCOL_TWIDERE = "twid" + "://"; 	 
+	public static final String DEFAULT_OAUTH_CALLBACK = PROTOCOL_TWIDERE + "com.twitter.oauth/"; 
+	 
 	public Twitter4jEx() {
 	}
 
@@ -172,7 +175,7 @@ public class Twitter4jEx {
 			ReadINI();
 			Twitter twitter = new TwitterFactory().getInstance();
 			twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET);
-			final RequestToken requestToken = twitter.getOAuthRequestToken();
+			final RequestToken requestToken = twitter.getOAuthRequestToken(DEFAULT_OAUTH_CALLBACK);
 			final String oauth_token = requestToken.getToken();
 			System.out.println("Got request token.");
 			System.out.println("Request token: " + oauth_token);
@@ -180,13 +183,12 @@ public class Twitter4jEx {
 					+ requestToken.getTokenSecret());
 			AccessToken accessToken = null;
 
-			BufferedReader br = new BufferedReader(new InputStreamReader(
-					System.in));
 			
 			System.out.println("AuthorizationURL : " + requestToken.getAuthorizationURL());
-
-			String page = Utils.GetPageContent(requestToken
-					.getAuthorizationURL());
+			InputStream stream1 = getHTTPContent(requestToken.getAuthorizationURL(), false, null);
+			String page = ReadStream(stream1);
+			
+			//String page = Utils.GetPageContent(requestToken.getAuthorizationURL());
 			// List<NameValuePair> postParams = Utils.getFormParams(page, USER,
 			// USER_PASS);
 
