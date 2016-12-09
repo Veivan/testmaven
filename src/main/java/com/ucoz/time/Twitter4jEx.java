@@ -17,7 +17,6 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
 import java.util.Properties;
 
 import org.apache.http.NameValuePair;
@@ -42,8 +41,7 @@ public class Twitter4jEx {
 	private static String ACCESS_TOKEN;
 	private static String ACCESS_TOKEN_SECRET;
 	
-	public static final String PROTOCOL_TWIDERE = "twid" + "://"; 	 
-	public static final String DEFAULT_OAUTH_CALLBACK = PROTOCOL_TWIDERE + "com.twitter.oauth/"; 
+	public static final String DEFAULT_OAUTH_CALLBACK = "http://www.ya.ru"; 
 	 
 	public Twitter4jEx() {
 	}
@@ -108,6 +106,7 @@ public class Twitter4jEx {
 		}
 	}
 
+// This works when callback url not set in app
 	public void getOAuthAccessToken() {
 		try {
 			ReadINI();
@@ -176,6 +175,7 @@ public class Twitter4jEx {
 			Twitter twitter = new TwitterFactory().getInstance();
 			twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET);
 			final RequestToken requestToken = twitter.getOAuthRequestToken(DEFAULT_OAUTH_CALLBACK);
+			//final RequestToken requestToken = twitter.getOAuthRequestToken();
 			final String oauth_token = requestToken.getToken();
 			System.out.println("Got request token.");
 			System.out.println("Request token: " + oauth_token);
