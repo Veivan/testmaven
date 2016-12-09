@@ -17,10 +17,20 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
+import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthenticationException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
+import org.jsoup.nodes.Element;
 
 import twitter4j.HttpParameter;
 import twitter4j.Status;
@@ -42,6 +52,7 @@ public class Twitter4jEx {
 	private static String ACCESS_TOKEN_SECRET;
 	
 	public static final String DEFAULT_OAUTH_CALLBACK = "http://www.ya.ru"; 
+	private static final String USER_AGENT = "Mozilla/5.0";
 	 
 	public Twitter4jEx() {
 	}
@@ -200,7 +211,7 @@ public class Twitter4jEx {
 			final Configuration conf = twitter.getConfiguration();
 			System.out.println("OAuthAuthorizationURL : " + conf.getOAuthAuthorizationURL());
 
-			final HttpParameter[] params = new HttpParameter[4];
+			/*final HttpParameter[] params = new HttpParameter[4];
 			params[0] = new HttpParameter("authenticity_token",
 					authenticity_token);
 			params[1] = new HttpParameter("oauth_token", oauth_token);
@@ -210,10 +221,19 @@ public class Twitter4jEx {
 					conf.getOAuthAuthorizationURL().toString(), true, params);
 
 			String page2 = ReadStream(stream);
-			Utils.Save2file(page2, "d:/demo.txt");
+			Utils.Save2file(page2, "d:/demo.txt"); */
 
 			// readCallbackURL(getHTTPContent(conf.getOAuthAuthorizationURL().toString(),
 			// true, params));
+			
+			List<NameValuePair> paramList = new ArrayList<NameValuePair>();
+
+			paramList.add(new  BasicNameValuePair("oauth_token", URLEncoder.encode(oauth_token, "UTF-8")));
+			paramList.add(new  BasicNameValuePair("session[username_or_email]", URLEncoder.encode(USER, "UTF-8")));
+			paramList.add(new  BasicNameValuePair("session[password]", URLEncoder.encode(USER_PASS, "UTF-8")));
+			paramList.add(new  BasicNameValuePair("authenticity_token", URLEncoder.encode(authenticity_token, "UTF-8")));
+
+			sendPost(conf.getOAuthAuthorizationURL().toString(), paramList);
 
 			final String oauth_verifier = "qq";
 			// parseParameters(callback_url.substring(callback_url.indexOf("?")
@@ -250,15 +270,57 @@ public class Twitter4jEx {
 		}
 	}
 
-	/*
-	 * private void readAuthenticityToken(final InputStream stream) throws
-	 * SAXException, IOException { final InputSource source = new
-	 * InputSource(stream); final Parser parser = new Parser();
-	 * parser.setProperty(Parser.schemaProperty, HtmlParser.schema);
-	 * parser.setContentHandler(mAuthenticityTokenHandler);
-	 * parser.parse(source); }
-	 */
+	private void sendPost(String url, List<NameValuePair> postParams)
+			throws Exception {
 
+		HttpClient client = HttpClientBuilder.create().setUserAgent(USER_AGENT).build();
+		
+		HttpResponse response = null;
+		
+		try {
+			HttpPost post = new HttpPost(url);
+
+			// add header
+			post.setHeader("Host", "twitter.com");
+			//post.setHeader("User-Agent", USER_AGENT);
+			post.setHeader("Accept",
+					"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+			post.setHeader("Accept-Language",
+					"ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4,bg;q=0.2");
+			//post.setHeader("Cookie", getCookies());
+			post.setHeader("Connection", "keep-alive");
+			post.setHeader("Referer", "https://twitter.com");
+			post.setHeader("Content-Type", "application/x-www-form-urlencoded");
+
+			post.setEntity(new UrlEncodedFormEntity(postParams, "UTF-8"));
+
+			response = client.execute(post);
+
+			int responseCode = response.getStatusLine().getStatusCode();
+
+			System.out.println("\nSending 'POST' request to URL : " + url);
+			System.out.println("Post parameters : " + postParams);
+			System.out.println("Response Code : " + responseCode);
+
+			BufferedReader rd = new BufferedReader(new InputStreamReader(
+					response.getEntity().getContent()));
+
+			StringBuffer result = new StringBuffer();
+			String line = "";
+			while ((line = rd.readLine()) != null) {
+				result.append(line);
+			}
+
+			Utils.Save2file(result.toString(), "d:/demo.txt");
+		} finally {
+			/*if (response != null) {
+				response.close();
+			} */
+		}
+
+		// System.out.println(result.toString());
+
+	}
 	private InputStream getHTTPContent(final String url_string,
 			final boolean post, final HttpParameter[] params)
 			throws IOException {
@@ -300,4 +362,5 @@ public class Twitter4jEx {
 		}
 		return buf.toString();
 	}
+
 }
