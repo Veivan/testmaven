@@ -113,6 +113,28 @@ public class Utils {
 		return result;
 	}
 	
+	public static String readCallbackUrl(String html)
+			throws UnsupportedEncodingException {
+
+		final String DEFAULT_OAUTH_CALLBACK = "http://www.ya.ru"; 
+		System.out.println("Extracting CallbackUrl...");
+		Document doc = Jsoup.parse(html);
+		String result = "";
+		String description = 
+				doc.select("meta[name=description]").get(0)
+	              .attr("content");
+		//Print description.
+		System.out.println("Meta Description: " + description);
+	 
+		//Get keywords from document object.
+		String keywords = 
+				doc.select("meta[name=keywords]").first()
+	                .attr("content");
+		//Print keywords.
+		System.out.println("Meta Keyword : " + keywords);		return result;
+	}
+	
+
 	public static void Save2file(String buffer, String filename) throws Exception {
 		BufferedWriter bwr = new BufferedWriter(new FileWriter(new File(
 				filename)));
