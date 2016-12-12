@@ -12,6 +12,8 @@ import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -112,30 +114,26 @@ public class Utils {
 		}
 		return result;
 	}
-	
-	public static String readCallbackUrl(String html)
-			throws UnsupportedEncodingException {
 
-		final String DEFAULT_OAUTH_CALLBACK = "http://www.ya.ru"; 
-		System.out.println("Extracting CallbackUrl...");
-		Document doc = Jsoup.parse(html);
+	public static String readOauthVerifier(String html) {
+		Document document = Jsoup.parse(html);
 		String result = "";
-		String description = 
-				doc.select("meta[name=description]").get(0)
-	              .attr("content");
-		//Print description.
-		System.out.println("Meta Description: " + description);
-	 
-		//Get keywords from document object.
-		String keywords = 
-				doc.select("meta[name=keywords]").first()
-	                .attr("content");
-		//Print keywords.
-		System.out.println("Meta Keyword : " + keywords);		return result;
+		Elements metalinks = document.select("meta[http-equiv=refresh]");
+		try {
+			String content = metalinks.attr("content").split(";")[1];
+			Pattern pattern = Pattern.compile(".*oauth_verifier=?(.*)$",
+					Pattern.CASE_INSENSITIVE);
+			Matcher m = pattern.matcher(content);
+			result = m.matches() ? m.group(1) : null;
+			System.out.println(result);
+			return result;
+		} catch (Exception e) {
+			return null;
+		}
 	}
-	
 
-	public static void Save2file(String buffer, String filename) throws Exception {
+	public static void Save2file(String buffer, String filename)
+			throws Exception {
 		BufferedWriter bwr = new BufferedWriter(new FileWriter(new File(
 				filename)));
 		// write contents of StringBuffer to a file

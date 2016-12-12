@@ -15,7 +15,7 @@ public class TestJSoup {
 		
 		final String html = String.join("", list);
 		
-		Utils.readCallbackUrl(html);
+		Utils.readOauthVerifier(html);
 
 	}
 
