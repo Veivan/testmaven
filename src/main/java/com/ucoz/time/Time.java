@@ -6,7 +6,7 @@ public class Time {
     	
     	Twitter4jEx tw4j = new Twitter4jEx();   	
     	//tw4j.getOAuthAccessToken();
-    	//Twitter4jEx.OperateWithAuthToken();
+    	Twitter4jEx.OperateWithAuthToken();
     	tw4j.getOAuthAccessTokenSilent();
     	
     	// Works well

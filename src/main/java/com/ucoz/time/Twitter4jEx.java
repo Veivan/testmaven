@@ -83,7 +83,7 @@ public class Twitter4jEx {
 
 		// Now let's go and ask for a protected resource!
 		System.out.println("Now we're going to access a protected resource...");
-		Status status = twitter.updateStatus("2sleep");
+		Status status = twitter.updateStatus("2sleep2");
 		System.out.println("Successfully updated the status to ["
 				+ status.getText() + "].");
 		System.exit(0);
