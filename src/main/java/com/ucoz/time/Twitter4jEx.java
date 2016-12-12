@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.CookieHandler;
+import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URI;
@@ -22,13 +24,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.message.BasicNameValuePair;
 import org.jsoup.nodes.Element;
 
@@ -53,7 +58,13 @@ public class Twitter4jEx {
 	
 	public static final String DEFAULT_OAUTH_CALLBACK = "http://www.ya.ru"; 
 	private static final String USER_AGENT = "Mozilla/5.0";
+	private String cookies;
 	 
+//	 HttpClient client = HttpClientBuilder.create().setRedirectStrategy(new LaxRedirectStrategy()).setUserAgent(USER_AGENT).build();
+	//HttpClient client = HttpClientBuilder.create().setUserAgent(USER_AGENT).build();
+
+	 private static HttpClient client = HttpClientBuilder.create().setUserAgent(USER_AGENT).build();
+
 	public Twitter4jEx() {
 	}
 
@@ -196,12 +207,14 @@ public class Twitter4jEx {
 
 			
 			System.out.println("AuthorizationURL : " + requestToken.getAuthorizationURL());
-			InputStream stream1 = getHTTPContent(requestToken.getAuthorizationURL(), false, null);
-			String page = ReadStream(stream1);
+			/*InputStream stream1 = getHTTPContent(requestToken.getAuthorizationURL(), false, null);
+			String page = ReadStream(stream1); */
 			
-			//String page = Utils.GetPageContent(requestToken.getAuthorizationURL());
-			// List<NameValuePair> postParams = Utils.getFormParams(page, USER,
-			// USER_PASS);
+			// make sure cookies is turn on
+			CookieHandler.setDefault(new CookieManager());
+
+			String page = GetPageContent(requestToken.getAuthorizationURL());
+//			List<NameValuePair> postParams = Utils.getFormParams(page, USER, USER_PASS);
 
 			String authenticity_token = Utils.readAuthenticityToken(page);
 			if (authenticity_token.isEmpty())
@@ -235,7 +248,7 @@ public class Twitter4jEx {
 
 			sendPost(conf.getOAuthAuthorizationURL().toString(), paramList);
 
-			final String oauth_verifier = "qq";
+			final String oauth_verifier = "";
 			// parseParameters(callback_url.substring(callback_url.indexOf("?")
 			// + 1)).get(OAUTH_VERIFIER);
 
@@ -270,10 +283,55 @@ public class Twitter4jEx {
 		}
 	}
 
+	public String GetPageContent(String url) throws Exception {
+		HttpGet request = new HttpGet(url);
+
+		request.setHeader("User-Agent", USER_AGENT);
+		request.setHeader("Accept",
+				"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+		request.setHeader("Accept-Language",
+				"ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4,bg;q=0.2");
+
+		HttpResponse response = client.execute(request);
+		int responseCode = response.getStatusLine().getStatusCode();
+
+		System.out.println("\nSending 'GET' request to URL : " + url);
+		System.out.println("Response Code : " + responseCode);
+
+		BufferedReader rd = new BufferedReader(new InputStreamReader(response
+				.getEntity().getContent()));
+
+		StringBuffer result = new StringBuffer();
+		String line = "";
+		while ((line = rd.readLine()) != null) {
+			result.append(line);
+		}
+
+
+		// set cookies
+		setCookies(response.getFirstHeader("set-cookie") == null ? ""
+				: collectCookiesresponse(response.getHeaders("set-cookie")));
+
+		return result.toString();
+
+
+	}
+
+	private static String collectCookiesresponse(Header[] headers) {
+		StringBuilder result = new StringBuilder();
+		for (Header header : headers) {
+			if (result.length() == 0) {
+				result.append(header.toString());
+			} else {
+				result.append(";" + header.getValue());
+			}
+		}
+		return result.toString();
+	}
+
 	private void sendPost(String url, List<NameValuePair> postParams)
 			throws Exception {
 
-		HttpClient client = HttpClientBuilder.create().setUserAgent(USER_AGENT).build();
 		
 		HttpResponse response = null;
 		
@@ -287,7 +345,7 @@ public class Twitter4jEx {
 					"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
 			post.setHeader("Accept-Language",
 					"ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4,bg;q=0.2");
-			//post.setHeader("Cookie", getCookies());
+			post.setHeader("Cookie", getCookies());
 			post.setHeader("Connection", "keep-alive");
 			post.setHeader("Referer", "https://twitter.com");
 			post.setHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -312,6 +370,10 @@ public class Twitter4jEx {
 			}
 
 			Utils.Save2file(result.toString(), "d:/demo.txt");
+
+           // String cooky = collectCookiesresponse(response.getHeaders("set-cookie"));
+		//	System.out.println(cooky);
+
 		} finally {
 			/*if (response != null) {
 				response.close();
@@ -321,6 +383,15 @@ public class Twitter4jEx {
 		// System.out.println(result.toString());
 
 	}
+	
+	public String getCookies() {
+		return cookies;
+	}
+
+	public void setCookies(String cookies) {
+		this.cookies = cookies;
+	}
+
 	private InputStream getHTTPContent(final String url_string,
 			final boolean post, final HttpParameter[] params)
 			throws IOException {

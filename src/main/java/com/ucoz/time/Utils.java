@@ -62,36 +62,6 @@ public class Utils {
 		return con;
 	}
 
-	public static String GetPageContent(String url) throws Exception {
-
-		HttpClient client = HttpClientBuilder.create().setUserAgent(USER_AGENT)
-				.build();
-		HttpGet request = new HttpGet(url);
-
-		request.setHeader("User-Agent", USER_AGENT);
-		request.setHeader("Accept",
-				"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-		request.setHeader("Accept-Language",
-				"ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4,bg;q=0.2");
-
-		HttpResponse response = client.execute(request);
-		int responseCode = response.getStatusLine().getStatusCode();
-
-		System.out.println("\nSending 'GET' request to URL : " + url);
-		System.out.println("Response Code : " + responseCode);
-
-		BufferedReader rd = new BufferedReader(new InputStreamReader(response
-				.getEntity().getContent()));
-
-		StringBuffer result = new StringBuffer();
-		String line = "";
-		while ((line = rd.readLine()) != null) {
-			result.append(line);
-		}
-
-		return result.toString();
-	}
-
 	public static List<NameValuePair> getFormParams(String html,
 			String username, String password)
 			throws UnsupportedEncodingException {
