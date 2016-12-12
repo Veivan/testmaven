@@ -246,9 +246,9 @@ public class Twitter4jEx {
 			paramList.add(new  BasicNameValuePair("session[password]", URLEncoder.encode(USER_PASS, "UTF-8")));
 			paramList.add(new  BasicNameValuePair("authenticity_token", URLEncoder.encode(authenticity_token, "UTF-8")));
 
-			sendPost(conf.getOAuthAuthorizationURL().toString(), paramList);
+			String page2 = sendPost(conf.getOAuthAuthorizationURL().toString(), paramList);
 
-			final String oauth_verifier = "";
+			final String oauth_verifier = Utils.readOauthVerifier(page2);
 			// parseParameters(callback_url.substring(callback_url.indexOf("?")
 			// + 1)).get(OAUTH_VERIFIER);
 
@@ -329,11 +329,11 @@ public class Twitter4jEx {
 		return result.toString();
 	}
 
-	private void sendPost(String url, List<NameValuePair> postParams)
+	private String sendPost(String url, List<NameValuePair> postParams)
 			throws Exception {
-
 		
 		HttpResponse response = null;
+		String result = "";
 		
 		try {
 			HttpPost post = new HttpPost(url);
@@ -360,16 +360,19 @@ public class Twitter4jEx {
 			System.out.println("Post parameters : " + postParams);
 			System.out.println("Response Code : " + responseCode);
 
-			BufferedReader rd = new BufferedReader(new InputStreamReader(
+			result = ReadStream(response.getEntity().getContent());
+			
+/*			BufferedReader rd = new BufferedReader(new InputStreamReader(
 					response.getEntity().getContent()));
 
 			StringBuffer result = new StringBuffer();
 			String line = "";
 			while ((line = rd.readLine()) != null) {
 				result.append(line);
-			}
+			} */
 
-			Utils.Save2file(result.toString(), "d:/demo.txt");
+			//Utils.Save2file(result.toString(), "d:/demo.txt");
+			Utils.Save2file(result, "d:/demo.txt");
 
            // String cooky = collectCookiesresponse(response.getHeaders("set-cookie"));
 		//	System.out.println(cooky);
@@ -381,7 +384,7 @@ public class Twitter4jEx {
 		}
 
 		// System.out.println(result.toString());
-
+		return result;
 	}
 	
 	public String getCookies() {
